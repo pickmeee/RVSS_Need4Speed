@@ -36,6 +36,8 @@ class SteerDataSet(Dataset):
         # Save the cut image
         cv2.imwrite(cut_img_filename, img)
 
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
         if self.transform == None:
             img = self.totensor(img)
         else:
@@ -46,12 +48,15 @@ class SteerDataSet(Dataset):
 
         if steering < 0:
             label = "LEFT"
+            label_id = 0
         elif steering > 0:
             label = "RIGHT"
+            label_id = 1
         else:
             label = "STRAIGHT"
+            label_id = 2
                       
-        return img, steering, label
+        return img, steering, label_id
 
     # def cutimage(self, img):
     #     # cut the top half of the image
