@@ -42,9 +42,16 @@ class SteerDataSet(Dataset):
             img = self.transform(img)   
         
         steering = f.split("/")[-1].split(self.img_ext)[0][6:]
-        steering = np.float32(steering)        
+        steering = np.float32(steering)
+
+        if steering < 0:
+            label = "LEFT"
+        elif steering > 0:
+            label = "RIGHT"
+        else:
+            label = "STRAIGHT"
                       
-        return img, steering
+        return img, steering, label
 
     # def cutimage(self, img):
     #     # cut the top half of the image
