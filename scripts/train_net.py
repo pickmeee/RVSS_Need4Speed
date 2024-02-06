@@ -74,7 +74,7 @@ optimizer = optim.SGD(net.parameters(), lr=0.00075, momentum=0.9)
 
 
 # Initialize the SummaryWriter
-writer = SummaryWriter('/RVSS_Need4Speed/runs/steering_model_experiment')
+writer = SummaryWriter('./RVSS_Need4Speed/runs/steering_model_experiment')
 
 # Assuming `inputs` is a batch of input data that has already been loaded
 sample_inputs, _ = next(iter(ds_dataloader))
@@ -117,7 +117,23 @@ writer.close()
 PATH = './RVSS_Need4Speed/models/train_steer_class_net.pth'
 torch.save(net.state_dict(), PATH)
 
-# test on ds_dataloader
+# test on tds_dataloader
+
+tds = SteerDataSet(os.path.join(script_path, '..', 'data', 'test'), '.jpg', transform)
+
+print("The test dataset contains %d images " % len(tds))
+
+tds_dataloader = DataLoader(tds,batch_size=1,shuffle=True)
+all_ty = []
+for S in tds_dataloader:
+    im, ty = S    
+    # print(f'shape: {im.shape}')
+    # print(f'label: {y}')
+    all_ty += ty.tolist()
+
+print(f'Input shape: {im.shape}')
+print('Outputs and their counts:')
+print(np.unique(all_ty, return_counts = True))
 
 # Set model to evaluation mode
 net.eval()
@@ -128,12 +144,12 @@ total = 0
 
 # Disable gradient computation
 with torch.no_grad():
-    for data in ds_dataloader:
-        images, y = data
-        labels = torch.zeros(y.size(0), dtype=torch.long)
-        labels[y < 0] = 0  # left
-        labels[y == 0] = 1  # straight
-        labels[y > 0] = 2  # right
+    for data in tds_dataloader:
+        images, ty = data
+        labels = torch.zeros(ty.size(0), dtype=torch.long)
+        labels[ty < 0] = 0  # left
+        labels[ty == 0] = 1  # straight
+        labels[ty > 0] = 2  # right
 
         # Forward pass
         outputs = net(images)
@@ -147,7 +163,7 @@ accuracy = 100 * correct / total
 writer.add_scalar('Accuracy/Test', accuracy, epoch)
 
 # Print accuracy
-print(f'Accuracy of the network on the {len(ds)} images: {accuracy} %')
+print(f'Accuracy of the network on the {len(tds)} images: {accuracy} %')
 
 
 
