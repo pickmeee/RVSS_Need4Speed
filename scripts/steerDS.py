@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 import cv2
 from glob import glob
 from os import path
+from cutimg import *
 
 class SteerDataSet(Dataset):
     
