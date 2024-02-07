@@ -26,7 +26,9 @@ ds = SteerDataSet(os.path.join(script_path, '..', 'data', 'train'), '.jpg', tran
 
 print("The dataset contains %d images " % len(ds))
 
-ds_dataloader = DataLoader(ds,batch_size=1,shuffle=True)
+batch_size = 10
+
+ds_dataloader = DataLoader(ds,batch_size,shuffle=True)
 all_y = []
 for S in ds_dataloader:
     im, y = S    
@@ -39,7 +41,7 @@ print('Outputs and their counts:')
 print(np.unique(all_y, return_counts = True))
 
 
-batch_size = 4
+
 trainset = ds
 trainloader = ds_dataloader
 classes = ('right', 'straight', 'left')
@@ -66,8 +68,9 @@ class Net(nn.Module):
 
 net = Net()
 
+
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.00075, momentum=0.9)
+optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
 
 
 # visualization
@@ -80,7 +83,7 @@ writer = SummaryWriter('./RVSS_Need4Speed/runs/steering_model_experiment')
 sample_inputs, _ = next(iter(ds_dataloader))
 writer.add_graph(net, sample_inputs)
 
-for epoch in range(2):  # loop over the dataset multiple times
+for epoch in range(50):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(ds_dataloader, 0):
@@ -103,8 +106,8 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 2000 == 1999:    # print every 2000 mini-batches
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}')
+        if i % 50 == 49:    # print every 500 mini-batches
+            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 50:.3f}')
             running_loss = 0.0
         
         # Log training loss using SummaryWriter
@@ -123,7 +126,7 @@ tds = SteerDataSet(os.path.join(script_path, '..', 'data', 'test'), '.jpg', tran
 
 print("The test dataset contains %d images " % len(tds))
 
-tds_dataloader = DataLoader(tds,batch_size=1,shuffle=True)
+tds_dataloader = DataLoader(tds,batch_size,shuffle=True)
 all_ty = []
 for S in tds_dataloader:
     im, ty = S    
@@ -142,6 +145,11 @@ net.eval()
 correct = 0
 total = 0
 
+# Initialize counters for correct predictions and total instances per class
+correct_per_class = {classname: 0 for classname in classes}
+total_per_class = {classname: 0 for classname in classes}
+
+
 # Disable gradient computation
 with torch.no_grad():
     for data in tds_dataloader:
@@ -155,19 +163,30 @@ with torch.no_grad():
         outputs = net(images)
         _, predicted = torch.max(outputs.data, 1)
 
+         # Update total and correct counts per class
+        for label, prediction in zip(labels, predicted):
+            if label == prediction:
+                correct_per_class[classes[label.item()]] += 1
+            total_per_class[classes[label.item()]] += 1
+
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
+        accuracy = 100 * correct / total
+        # Log accuracy to TensorBoard
+        writer.add_scalar('Accuracy/Test', accuracy, epoch)
 
-accuracy = 100 * correct / total
-# Log accuracy to TensorBoard
-writer.add_scalar('Accuracy/Test', accuracy, epoch)
+ # Update total and correct counts per class
+for label, prediction in zip(labels, predicted):
+    if label == prediction:
+        correct_per_class[classes[label.item()]] += 1
+        total_per_class[classes[label.item()]] += 1
 
 # Print accuracy
 print(f'Accuracy of the network on the {len(tds)} images: {accuracy} %')
 
-
-
-
-
+for classname in classes:
+    accuracy = 100 * float(correct_per_class[classname]) / total_per_class[classname]
+    writer.add_scalar(f'Accuracy/{classname}', accuracy, epoch)
+    print(classname, accuracy)
 
 
