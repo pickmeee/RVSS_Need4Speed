@@ -15,7 +15,8 @@ import torchvision.transforms as transforms
 script_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(script_path, "../PenguinPi-robot/software/python/client/")))
 from pibot_client import PiBot
-
+from train_net import Net
+from cutimg import CutImage
 
 parser = argparse.ArgumentParser(description='PiBot client')
 parser.add_argument('--ip', type=str, default='localhost', help='IP address of PiBot')
@@ -27,8 +28,12 @@ bot = PiBot(ip=args.ip)
 bot.setVelocity(0, 0)
 
 #INITIALISE NETWORK HERE
+net = Net()
 
 #LOAD NETWORK WEIGHTS HERE
+script_path = os.path.dirname(os.path.realpath(__file__))
+PATH = os.path.join(script_path, '..', 'models/train_steer_class_net.pth')
+net.load_state_dict(torch.load(PATH))
 
 #countdown before beginning
 print("Get ready...")
@@ -48,10 +53,25 @@ try:
         im = bot.getImage()
 
         #TO DO: apply any necessary image transforms
+        transform = transforms.Compose(
+            [transforms.ToTensor(),
+             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+        cutter = CutImage(im)
+        im = cutter.cutimage()
+        im = transform(im)
 
         #TO DO: pass image through network get a prediction
+        outputs = net(im)
+        _, predicted = torch.max(outputs.data, 1)
 
         #TO DO: convert prediction into a meaningful steering angle
+        if predicted.numpy()[0] == 0:
+            angle -= 0.1
+        elif predicted.numpy()[0] == 1:
+            angle = 0
+        else:
+            angle += 0.1
 
         #TO DO: check for stop signs?
         
