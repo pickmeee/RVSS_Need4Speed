@@ -1,0 +1,15 @@
+Labeling: classify steering angles into
+zero angle: stratght, 
+negative angle: left,
+positive angle: right.
+
+
+Image processing
+1. Crop the image
+2. Greyscale
+3. Augmentation: Flip non-zero steering angle images
+
+
+
+
+

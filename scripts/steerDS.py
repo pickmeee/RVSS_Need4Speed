@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 import cv2
 from glob import glob
 from os import path, makedirs
+from PIL import Image
 
 from cutimg import CutImage
 
@@ -58,6 +59,13 @@ class SteerDataSet(Dataset):
         cut_img_filename = path.join(self.train_cut_folder, path.basename(f))
         # Save the cut image
         cv2.imwrite(cut_img_filename, img)
+
+
+        # Convert BGR to RGB
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # Convert the NumPy array (RGB) to a PIL Image
+        img = Image.fromarray(img)
 
 
         if self.transform == None:
