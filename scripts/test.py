@@ -19,6 +19,7 @@ from structure_net import Net
 from cutimg import CutImage
 from PIL import Image, ImageEnhance
 import copy
+import pytesseract
 
 im2 = cv2.imread("/home/yanzhang/rvss_ws/RVSS_Need4Speed/data/0000090.00.jpg")
 kernel = np.ones((9,9),np.float32)/81
@@ -50,10 +51,27 @@ print(thresh)
 
 print(len(blobs))
 
-# if len(blobs) > 0:
-#     for blob in range(len(blobs)):
-#         if blobs[blob].area > 36:
-#             print("Stop Sign!")
-#             # bot.setVelocity(0, 0)
-#             time.sleep(0.5)
-#             break
+if len(blobs) > 0:
+    for blob in range(len(blobs)):
+        if blobs[blob].area > 36:
+            print("Stop Sign!")
+            # bot.setVelocity(0, 0)
+            time.sleep(0.5)
+            break
+else:
+    
+
+    # Apply thresholding to binarize the image
+    _, binary = cv2.threshold(gray_img, 150, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    pytesseract.pytesseract.tesseract_cmd = '/path/to/tesseract'
+
+    # Use PyTesseract to extract text
+    text = pytesseract.image_to_string(binary, config='--psm 6')
+
+    # Check for the presence of letters S, T, O, P
+    if any(letter in text for letter in ['S', 'T', 'O', 'P']):
+        print("Stop Sign!")
+        # list_of_actions.append(3)
+        # bot.setVelocity(0, 0)
+        time.sleep(0.8)

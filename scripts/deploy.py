@@ -3,6 +3,7 @@ import time
 import click
 import math
 import cv2
+import pytesseract
 import os
 import sys
 import numpy as np
@@ -49,7 +50,7 @@ print("1")
 time.sleep(1)
 print("GO!")
 
-
+list_of_actions = []
 try:
     angle = 0
     while True:
@@ -78,8 +79,10 @@ try:
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # Define a range for the red color in HSV
-        lower_red = np.array([140, 140, 140])
-        upper_red = np.array([190,190, 190])
+        # lower_red = np.array([140, 140, 140])
+        # upper_red = np.array([190,190, 190])
+        lower_red = np.array([130, 130, 130])
+        upper_red = np.array([195,195, 195])
         # Create a mask using the inRange function
         mask = cv2.inRange(hsv, lower_red, upper_red)
         # Bitwise AND the original image with the mask
@@ -94,14 +97,32 @@ try:
 
         params = cv2.SimpleBlobDetector_Params()
         params.filterByArea = True
-        params.minArea = 12
+        params.minArea = 4
         detector = cv2.SimpleBlobDetector_create(params)
         blobs = detector.detect(thresh)
 
-        if len(blobs) > 0:
+        if len(blobs) > 0 and len(list_of_actions) > 40 and 3 not in list_of_actions[-40:]:
                 print("Stop Sign!")
+                list_of_actions.append(3)
                 bot.setVelocity(0, 0)
-                time.sleep(0.5)
+                time.sleep(0.8)
+        # else:
+        #     # Assuming 'im' is your preprocessed image ready for OCR
+        #     # Convert to grayscale for better OCR results
+        #     gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+
+        #     # Apply thresholding to binarize the image
+        #     _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        #     # Use PyTesseract to extract text
+        #     text = pytesseract.image_to_string(binary, config='--psm 6')
+
+        #     # Check for the presence of letters S, T, O, P
+        #     if any(letter in text for letter in ['S', 'T', 'O', 'P']):
+        #         print("Stop Sign!")
+        #         list_of_actions.append(3)
+        #         bot.setVelocity(0, 0)
+        #         time.sleep(0.8)
 
         ################
 
@@ -139,16 +160,21 @@ try:
         _, predicted = torch.max(outputs.data, 1)
 
 
-
+        list_of_actions.append(predicted.numpy()[0])
         #TO DO: convert prediction into a meaningful steering angle
         if predicted.numpy()[0] == 0:
-            angle = -0.2
+            angle = -0.22
             Kd = 10
         elif predicted.numpy()[0] == 1:
             angle = 0
-            Kd = 20
+            if len(list_of_actions) > 3 and list_of_actions[-3:] == [1,1,1]:
+                Kd = Kd + 5
+                if Kd > 45:
+                    Kd = 45
+            else:
+                Kd = 20
         else:
-            angle = +0.2
+            angle = +0.22
             Kd = 10
         
         print(predicted.numpy()[0])
