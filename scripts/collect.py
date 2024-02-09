@@ -54,10 +54,10 @@ def on_press(key):
             angle = 0
         elif key == keyboard.Key.right:
             print("right")
-            angle += 0.1
+            angle += 0.3
         elif key == keyboard.Key.left:
             print("left")
-            angle -= 0.1
+            angle -= 0.3
         elif key == keyboard.Key.space:
             print("stop")
             bot.setVelocity(0, 0)
@@ -78,8 +78,8 @@ try:
         img = bot.getImage()
         
         angle = np.clip(angle, -0.5, 0.5)
-        Kd = 20  # Base wheel speeds
-        Ka = 20  # Turn speed
+        Kd = 10  # Base wheel speeds
+        Ka = 25  # Turn speed
         left  = int(Kd + Ka*angle)
         right = int(Kd - Ka*angle)
         

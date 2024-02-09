@@ -8,6 +8,7 @@ from os import path, makedirs
 from PIL import Image
 
 from cutimg import CutImage
+from PIL import Image, ImageEnhance
 
 class SteerDataSet(Dataset):
     
@@ -36,7 +37,7 @@ class SteerDataSet(Dataset):
         
         self.totensor = transforms.ToTensor()
 
-        self.train_cut_folder = path.join(self.root_folder, "train_cut")
+        self.train_cut_folder = path.join(self.root_folder, "train_modified")
         # Create the train_cut folder if it doesn't exist
         if not path.exists(self.train_cut_folder):
             makedirs(self.train_cut_folder)
@@ -55,19 +56,47 @@ class SteerDataSet(Dataset):
         if steering != float(f.split("/")[-1].split(self.img_ext)[0][6:]):
             img = cv2.flip(img, 1)  # Flip horizontally
 
+
+
+        
+        # Convert BGR to RGB
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+
+        # Convert the NumPy array (RGB) to a PIL Image
+        img = Image.fromarray(img)
+        
+        saturation_enhancer = ImageEnhance.Color(img)
+        img = saturation_enhancer.enhance(factor = 2)
+
+        contrast_enhancer = ImageEnhance.Contrast(img)
+        img = contrast_enhancer.enhance(factor = 2)
+        
+
+
+        # # convert BGR to HSV
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+        # # # Adjust the saturation
+        # img[:, :, 1] = img[:, :, 1] *1.5
+
+
+        # #Adjust contrast
+        # brightness = 0
+        # contrast = 1.5
+        # img = cv2.addWeighted(img, contrast, np.zeros(img.shape, img.dtype), 0, brightness)      
+
+        # img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
+
+        img = np.array(img)
+
         # Define the path for the cut image
         cut_img_filename = path.join(self.train_cut_folder, path.basename(f))
         # Save the cut image
         cv2.imwrite(cut_img_filename, img)
 
-
-        # Convert BGR to RGB
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        # Convert the NumPy array (RGB) to a PIL Image
         img = Image.fromarray(img)
-
-
+    
         if self.transform == None:
             img = self.totensor(img)
         else:

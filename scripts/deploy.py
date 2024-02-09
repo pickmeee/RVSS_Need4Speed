@@ -17,7 +17,8 @@ sys.path.append(os.path.abspath(os.path.join(script_path, "../PenguinPi-robot/so
 from pibot_client import PiBot
 from structure_net import Net
 from cutimg import CutImage
-from PIL import Image
+from PIL import Image, ImageEnhance
+from machinevisiontoolbox import Image
 
 parser = argparse.ArgumentParser(description='PiBot client')
 parser.add_argument('--ip', type=str, default='localhost', help='IP address of PiBot')
@@ -33,7 +34,7 @@ net = Net()
 
 #LOAD NETWORK WEIGHTS HERE
 script_path = os.path.dirname(os.path.realpath(__file__))
-PATH = os.path.join(script_path, '..', 'models/model_1.pth')
+PATH = os.path.join(script_path, '..', 'models/train_steer_class_net_modified.pth')
 net.load_state_dict(torch.load(PATH))
 
 #countdown before beginning
@@ -54,16 +55,59 @@ try:
         im = bot.getImage()
 
         # Convert the NumPy array to a PIL image if necessary (assuming 'im' is RGB format)
-        im = Image.fromarray(im.transpose(1, 2, 0))  # Transpose the dimensions from (C, H, W) to (H, W, C)
+        # im = Image.fromarray(im.transpose(1, 2, 0))  # Transpose the dimensions from (C, H, W) to (H, W, C)
 
+        
+        
         #TO DO: apply any necessary image transforms
         transform = transforms.Compose(
             [transforms.ToTensor(),
+             transforms.ColorJitter(contrast=0.15, saturation=1),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
         cutter = CutImage(im)
         im = cutter.cutimage()
-        im = transform(im)
+
+        #stop sign #####################
+        kernel = np.ones((9,9),np.float32)/81
+        image = cv2.filter2D(im,-1,kernel)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        # Define a range for the red color in HSV
+        lower_red = np.array([0, 120, 80])
+        upper_red = np.array([10, 255, 255])
+        # Create a mask using the inRange function
+        mask = cv2.inRange(hsv, lower_red, upper_red)
+        # Bitwise AND the original image with the mask
+        result = cv2.bitwise_and(image, image, mask=mask)
+
+        gray_img=cv2.cvtColor(result,cv2.COLOR_BGR2GRAY)
+
+        ret, thresh = cv2.threshold(gray_img, 1, 255, cv2.THRESH_BINARY)
+
+        blobs = thresh.blobs()
+        if len(blobs) > 0:
+            for blob in range(len(blobs)):
+                if blobs[blob].area > 100:
+                    print("Stop Sign!")
+                    bot.setVelocity(0, 0)
+                    time.sleep(0.5)
+                    break
+
+        ################
+
+
+        im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        im = Image.fromarray(im)
+
+        saturation_enhancer = ImageEnhance.Color(im)
+        im = saturation_enhancer.enhance(factor = 2)
+
+        contrast_enhancer = ImageEnhance.Contrast(im)
+        im = contrast_enhancer.enhance(factor = 1.5)
+
+
+        # im = transform(im)
 
         # Apply any necessary image transforms (assuming these expect a PIL image)
         im = transform(im)
@@ -76,21 +120,26 @@ try:
 
         
         
-        print(f'shape: {im.shape}')
+        # print(f'shape: {im.shape}')
 
         # torch.reshape(im, (1, 3,120,320))
 
+        
         #TO DO: pass image through network get a prediction
         outputs = net(im)
         _, predicted = torch.max(outputs.data, 1)
 
+
+
         #TO DO: convert prediction into a meaningful steering angle
         if predicted.numpy()[0] == 0:
-            angle -= 0.3
+            angle = -0.2
         elif predicted.numpy()[0] == 1:
             angle = 0
         else:
-            angle += 0.3
+            angle = +0.2
+        
+        print(predicted.numpy()[0])
 
         #TO DO: check for stop signs?
         

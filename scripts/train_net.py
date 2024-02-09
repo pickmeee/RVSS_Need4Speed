@@ -25,7 +25,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 transform = transforms.Compose([
     # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-    transforms.ColorJitter(hue=0.05),
+    transforms.ColorJitter(contrast=0.15, saturation=1),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
@@ -171,7 +171,7 @@ print('Finished Training')
 writer.close()
 
 
-PATH = './RVSS_Need4Speed/models/train_steer_class_net.pth'
+PATH = './RVSS_Need4Speed/models/train_steer_class_net_modified.pth'
 torch.save(net.state_dict(), PATH)
 
 # test on tds_dataloader
