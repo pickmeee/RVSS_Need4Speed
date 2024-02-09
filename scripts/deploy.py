@@ -18,7 +18,7 @@ from pibot_client import PiBot
 from structure_net import Net
 from cutimg import CutImage
 from PIL import Image, ImageEnhance
-from machinevisiontoolbox import Image
+import copy
 
 parser = argparse.ArgumentParser(description='PiBot client')
 parser.add_argument('--ip', type=str, default='localhost', help='IP address of PiBot')
@@ -34,7 +34,7 @@ net = Net()
 
 #LOAD NETWORK WEIGHTS HERE
 script_path = os.path.dirname(os.path.realpath(__file__))
-PATH = os.path.join(script_path, '..', 'models/train_steer_class_net_modified.pth')
+PATH = os.path.join(script_path, '..', 'models/train_steer_class_net.pth')
 net.load_state_dict(torch.load(PATH))
 
 #countdown before beginning
@@ -69,13 +69,15 @@ try:
         im = cutter.cutimage()
 
         #stop sign #####################
+        
+        im2 = copy.deepcopy(im)
         kernel = np.ones((9,9),np.float32)/81
-        image = cv2.filter2D(im,-1,kernel)
+        image = cv2.filter2D(im2,-1,kernel)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # Define a range for the red color in HSV
-        lower_red = np.array([0, 120, 80])
-        upper_red = np.array([10, 255, 255])
+        lower_red = np.array([120, 100, 100])
+        upper_red = np.array([190, 255, 255])
         # Create a mask using the inRange function
         mask = cv2.inRange(hsv, lower_red, upper_red)
         # Bitwise AND the original image with the mask
@@ -85,14 +87,19 @@ try:
 
         ret, thresh = cv2.threshold(gray_img, 1, 255, cv2.THRESH_BINARY)
 
-        blobs = thresh.blobs()
+        detector = cv2.SimpleBlobDetector_create()
+
+
+        params = cv2.SimpleBlobDetector_Params()
+        params.filterByArea = True
+        params.minArea = 9
+        detector = cv2.SimpleBlobDetector_create(params)
+        blobs = detector.detect(thresh)
+
         if len(blobs) > 0:
-            for blob in range(len(blobs)):
-                if blobs[blob].area > 100:
-                    print("Stop Sign!")
-                    bot.setVelocity(0, 0)
-                    time.sleep(0.5)
-                    break
+                print("Stop Sign!")
+                bot.setVelocity(0, 0)
+                time.sleep(0.5)
 
         ################
 

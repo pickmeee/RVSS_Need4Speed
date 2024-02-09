@@ -171,7 +171,7 @@ print('Finished Training')
 writer.close()
 
 
-PATH = './RVSS_Need4Speed/models/train_steer_class_net_modified.pth'
+PATH = './RVSS_Need4Speed/models/train_steer_class_net.pth'
 torch.save(net.state_dict(), PATH)
 
 # test on tds_dataloader
