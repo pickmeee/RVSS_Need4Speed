@@ -17,7 +17,7 @@ class SteerDataSet(Dataset):
         self.filenames = glob(path.join(self.root_folder,"*" + self.img_ext))            
         self.totensor = transforms.ToTensor()
 
-        self.train_cut_folder = path.join(self.root_folder, "train_cut")
+        self.train_cut_folder = path.join(self.root_folder, "cut")
         # Create the train_cut folder if it doesn't exist
         if not path.exists(self.train_cut_folder):
             makedirs(self.train_cut_folder)
@@ -36,7 +36,11 @@ class SteerDataSet(Dataset):
         # Save the cut image
         cv2.imwrite(cut_img_filename, img)
 
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        cv2.imshow('img', img)
 
         if self.transform == None:
             img = self.totensor(img)
@@ -56,7 +60,7 @@ class SteerDataSet(Dataset):
             label = "STRAIGHT"
             label_id = 2
                       
-        return img, steering, label_id
+        return img, steering, label_id, f
 
     # def cutimage(self, img):
     #     # cut the top half of the image

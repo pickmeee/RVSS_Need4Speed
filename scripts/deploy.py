@@ -49,7 +49,7 @@ print("GO!")
 try:
     angle = 0
     while True:
-        # get an image from the the robot
+        # get an image from the robot
         im = bot.getImage()
 
         #TO DO: apply any necessary image transforms
@@ -75,7 +75,7 @@ try:
 
         #TO DO: check for stop signs?
         
-        angle = 0
+        # angle = 0
 
         Kd = 20 #base wheel speeds, increase to go faster, decrease to go slower
         Ka = 20 #how fast to turn when given an angle

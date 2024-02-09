@@ -6,18 +6,15 @@ script_path = os.path.dirname(os.path.realpath(__file__))
 PATH = os.path.join(script_path, '..', 'data/collect_stop_sign/')
 
 # Load image
-image = cv2.imread(PATH + '0000120.00.jpg')
+image = cv2.imread(PATH + '0007900.00.jpg')
 
 # Convert image to HSV color space
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
 print(hsv[7][10])
 # Define lower and upper bounds for the color you want to threshold
-lower_color = np.array([100, 90, 100])
-upper_color = np.array([150, 120, 150])
-
-lower_color = np.array([120, 70, 100])
-upper_color = np.array([180,150,150])
+lower_color = np.array([140, 140, 140])
+upper_color = np.array([190, 190, 190])
 
 # Threshold the HSV image to get only the color within the specified range
 mask = cv2.inRange(hsv, lower_color, upper_color)

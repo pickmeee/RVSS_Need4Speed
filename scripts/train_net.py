@@ -29,8 +29,8 @@ print("The dataset contains %d images " % len(ds))
 ds_dataloader = DataLoader(ds,batch_size=1,shuffle=True)
 all_y = []
 for S in ds_dataloader:
-    im, y = S    
-    # print(f'shape: {im.shape}')
+    im, y, _, _ = S
+    print(f'shape: {im.shape}')
     # print(f'label: {y}')
     all_y += y.tolist()
 
@@ -77,7 +77,7 @@ optimizer = optim.SGD(net.parameters(), lr=0.00075, momentum=0.9)
 writer = SummaryWriter('./RVSS_Need4Speed/runs/steering_model_experiment')
 
 # Assuming `inputs` is a batch of input data that has already been loaded
-sample_inputs, _ = next(iter(ds_dataloader))
+sample_inputs, _, _, _ = next(iter(ds_dataloader))
 writer.add_graph(net, sample_inputs)
 
 for epoch in range(2):  # loop over the dataset multiple times
@@ -85,7 +85,7 @@ for epoch in range(2):  # loop over the dataset multiple times
     running_loss = 0.0
     for i, data in enumerate(ds_dataloader, 0):
         # get the inputs; data is a list of [inputs, labels]
-        inputs, y = data
+        inputs, y, _, _ = data
 
         labels = torch.zeros(y.size(0), dtype=torch.long)  # Ensure labels tensor matches batch size
         labels[y < 0] = 0  # left
@@ -114,7 +114,7 @@ print('Finished Training')
 writer.close()
 
 
-PATH = './RVSS_Need4Speed/models/train_steer_class_net.pth'
+PATH = os.path.join(script_path, '..', 'models/train_steer_class_net.pth')
 torch.save(net.state_dict(), PATH)
 
 # test on tds_dataloader
@@ -126,7 +126,7 @@ print("The test dataset contains %d images " % len(tds))
 tds_dataloader = DataLoader(tds,batch_size=1,shuffle=True)
 all_ty = []
 for S in tds_dataloader:
-    im, ty = S    
+    im, ty, _, _= S
     # print(f'shape: {im.shape}')
     # print(f'label: {y}')
     all_ty += ty.tolist()
@@ -144,8 +144,10 @@ total = 0
 
 # Disable gradient computation
 with torch.no_grad():
+    file = open("results.txt", "w")
+    file.close()
     for data in tds_dataloader:
-        images, ty = data
+        images, ty, _, f = data
         labels = torch.zeros(ty.size(0), dtype=torch.long)
         labels[ty < 0] = 0  # left
         labels[ty == 0] = 1  # straight
@@ -157,6 +159,14 @@ with torch.no_grad():
 
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
+
+        if predicted != labels:
+            # TODO: write f, write predicted
+            file = open("results.txt", "a")
+            file.write(f[0] + '\n')
+
+            file.write(str(predicted.numpy()[0]) + '\n')
+            file.write(str(labels.numpy()[0]) + '\n')
 
 accuracy = 100 * correct / total
 # Log accuracy to TensorBoard
