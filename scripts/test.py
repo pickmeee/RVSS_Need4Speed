@@ -64,7 +64,7 @@ else:
     # Apply thresholding to binarize the image
     _, binary = cv2.threshold(gray_img, 150, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    pytesseract.pytesseract.tesseract_cmd = '/path/to/tesseract'
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
     # Use PyTesseract to extract text
     text = pytesseract.image_to_string(binary, config='--psm 6')

@@ -101,25 +101,23 @@ try:
         detector = cv2.SimpleBlobDetector_create(params)
         blobs = detector.detect(thresh)
 
-        if len(blobs) > 0 and len(list_of_actions) > 40 and 3 not in list_of_actions[-40:]:
+        if len(blobs) > 0 and len(list_of_actions) > 45 and 3 not in list_of_actions[-45:]:
                 print("Stop Sign!")
                 list_of_actions.append(3)
                 bot.setVelocity(0, 0)
                 time.sleep(0.8)
-        # else:
-        #     # Assuming 'im' is your preprocessed image ready for OCR
-        #     # Convert to grayscale for better OCR results
-        #     gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
-
+        # elif len(list_of_actions) > 40 and 3 not in list_of_actions[-40:]:
         #     # Apply thresholding to binarize the image
-        #     _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        #     _, binary = cv2.threshold(gray_img, 150, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        #     pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
         #     # Use PyTesseract to extract text
         #     text = pytesseract.image_to_string(binary, config='--psm 6')
 
         #     # Check for the presence of letters S, T, O, P
         #     if any(letter in text for letter in ['S', 'T', 'O', 'P']):
-        #         print("Stop Sign!")
+        #         print("Stop Sign! text")
         #         list_of_actions.append(3)
         #         bot.setVelocity(0, 0)
         #         time.sleep(0.8)
@@ -168,9 +166,9 @@ try:
         elif predicted.numpy()[0] == 1:
             angle = 0
             if len(list_of_actions) > 3 and list_of_actions[-3:] == [1,1,1]:
-                Kd = Kd + 5
-                if Kd > 45:
-                    Kd = 45
+                Kd = Kd + 4
+                if Kd > 40:
+                    Kd = 40
             else:
                 Kd = 20
         else:

@@ -14,7 +14,7 @@ from pibot_client import PiBot
 parser = argparse.ArgumentParser(description='PiBot client')
 parser.add_argument('--ip', type=str, default='localhost', help='IP address of PiBot')
 parser.add_argument('--im_num', type = int, default = 0)
-parser.add_argument('--folder', type = str, default = 'train')
+parser.add_argument('--folder', type = str, default = 'stop_sign')
 args = parser.parse_args()
 
 if not os.path.exists(script_path+"/../data/"+args.folder):
