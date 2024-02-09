@@ -26,8 +26,8 @@ image = cv2.filter2D(im2,-1,kernel)
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
 # Define a range for the red color in HSV
-lower_red = np.array([100, 100, 100])
-upper_red = np.array([190, 255, 255])
+lower_red = np.array([140, 140, 140])
+upper_red = np.array([190,190, 190])
 # Create a mask using the inRange function
 mask = cv2.inRange(hsv, lower_red, upper_red)
 # Bitwise AND the original image with the mask
@@ -39,16 +39,21 @@ ret, thresh = cv2.threshold(gray_img, 1, 255, cv2.THRESH_BINARY)
 
 detector = cv2.SimpleBlobDetector_create()
 
-cv2.imwrite("ht.jpg", thresh)
+
+params = cv2.SimpleBlobDetector_Params()
+params.filterByArea = True
+params.minArea = 16
+detector = cv2.SimpleBlobDetector_create(params)
+blobs = detector.detect(thresh)
+cv2.imwrite("jghuy.jpg", thresh)
 print(thresh)
 
-blobs = detector.detect(thresh)
+print(len(blobs))
 
-
-if len(blobs) > 0:
-    for blob in range(len(blobs)):
-        if blobs[blob].area > 36:
-            print("Stop Sign!")
-            # bot.setVelocity(0, 0)
-            time.sleep(0.5)
-            break
+# if len(blobs) > 0:
+#     for blob in range(len(blobs)):
+#         if blobs[blob].area > 36:
+#             print("Stop Sign!")
+#             # bot.setVelocity(0, 0)
+#             time.sleep(0.5)
+#             break

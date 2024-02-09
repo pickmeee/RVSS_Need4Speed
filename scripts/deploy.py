@@ -35,6 +35,7 @@ net = Net()
 #LOAD NETWORK WEIGHTS HERE
 script_path = os.path.dirname(os.path.realpath(__file__))
 PATH = os.path.join(script_path, '..', 'models/train_steer_class_net.pth')
+# PATH = '/home/yanzhang/rvss_ws/RVSS_Need4Speed/models/train_steer_class_net_modified.pth'
 net.load_state_dict(torch.load(PATH))
 
 #countdown before beginning
@@ -47,6 +48,7 @@ time.sleep(1)
 print("1")
 time.sleep(1)
 print("GO!")
+
 
 try:
     angle = 0
@@ -76,8 +78,8 @@ try:
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
         # Define a range for the red color in HSV
-        lower_red = np.array([120, 100, 100])
-        upper_red = np.array([190, 255, 255])
+        lower_red = np.array([140, 140, 140])
+        upper_red = np.array([190,190, 190])
         # Create a mask using the inRange function
         mask = cv2.inRange(hsv, lower_red, upper_red)
         # Bitwise AND the original image with the mask
@@ -92,7 +94,7 @@ try:
 
         params = cv2.SimpleBlobDetector_Params()
         params.filterByArea = True
-        params.minArea = 9
+        params.minArea = 12
         detector = cv2.SimpleBlobDetector_create(params)
         blobs = detector.detect(thresh)
 
@@ -141,10 +143,13 @@ try:
         #TO DO: convert prediction into a meaningful steering angle
         if predicted.numpy()[0] == 0:
             angle = -0.2
+            Kd = 10
         elif predicted.numpy()[0] == 1:
             angle = 0
+            Kd = 20
         else:
             angle = +0.2
+            Kd = 10
         
         print(predicted.numpy()[0])
 
@@ -152,7 +157,7 @@ try:
         
         # angle = 0
 
-        Kd = 10 #base wheel speeds, increase to go faster, decrease to go slower
+        # Kd = 10 #base wheel speeds, increase to go faster, decrease to go slower
         Ka = 25 #how fast to turn when given an angle
         left  = int(Kd + Ka*angle)
         right = int(Kd - Ka*angle)
